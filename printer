@@ -1,0 +1,101 @@
+DRUKARA  
+
+class Drukarka:
+    """Klasa reprezentująca drukarkę laserową.
+    Obiekty tej klasy posiadają prywatne atrybuty przechowujące:
+    - nazwę marki i modelu drukarki,
+    - aktuaną liczbę arkuszy papieru,
+    - aktulany poziom tonera.
+    Klasa modeluje jedynie druk jednostronny (jedna strona wydruku zużywa
+    jeden arkusz papieru). Wydruk jednej strony zużywa 0.5% tonera"""
+
+    def __init__(self, marka, model):
+        """Zainicjalizuj obiekt klasy ustawiając podane w postaci argumentów
+        nazwy marki i modelu. Liczbę arkuszy papieru oraz poziom tonera
+        ustaw na wartość 0"""
+        self.__marka = marka
+        self.__model = model
+        self.__papier = 0
+        self.__toner = 0
+
+    def __str__(self):
+        """Zwróć łańcuch tekstowy zawierający markę, model i status drukarki"""
+        return f"{self.__marka} ({self.__model}), papier: {self.__papier} arkuszy, toner: {self.__toner} %"
+
+    def sprawna(self):
+        """Sprawdź, czy drukarka ma załadowany papier i toner.
+        Jesli czegoś brakuje, zwróć False. Jeśli nie, zwróć True."""
+        return self.__papier > 0 and self.__toner > 0
+
+    def zaladuj_papier(self, papier):
+        """Zamodeluj operację dodawania papieru.
+        Suma arkuszy po załadowaniu nie może przekroczyć 200.
+        W przypadku próby przekroczenia tej wartości zwróć False i nie zmieniaj
+        stanu papieru w drukarce. W przypadku pomyślnnej próby zwróć True."""
+        suma = self.__papier + papier
+        if suma > 200:
+            return False
+        self.__papier = suma
+        return True
+
+    def wymien_toner(self):
+        """Zamodeluj operację wymiany tonera ustawiając poziom tonera na 100%"""
+        self.__toner = 100
+
+    def drukuj(self, liczba_stron):
+        """Zamodeluj wydruk zadanej liczby stron aktualizując stan papieru
+        i tonera. Uwzględnij fakt, że zarówno papieru jak i tonera może
+        zabraknąć, uniemożliwiając pełen wydruk.
+        Zwróć liczbę pomyślnie wydrukowanych stron."""
+
+        if not self.sprawna():
+            return 0
+
+        # Maksymalna liczba stron, którą można wydrukować
+        strony_z_papieru = self.__papier
+        strony_z_tonera = int(self.__toner / 0.5)
+
+        # Najmniejsza z tych dwóch wartości to liczba stron, którą można wydrukować
+        liczba_do_druku = min(strony_z_papieru, strony_z_tonera, liczba_stron)
+
+        # Aktualizacja stanu po wydruku
+        self.__papier -= liczba_do_druku
+        self.__toner -= liczba_do_druku * 0.5
+
+        return liczba_do_druku
+
+
+if __name__ == "__main__":
+
+    """Kod testujący klasę Drukarka. Komentarze po prawej stronie
+    prezentują wynik, jaki powinien się pojawić w konsoli"""
+
+    d1 = Drukarka("Brother", "HL-1210WE")
+    d2 = Drukarka("HP", "LaserJet Pro M15w")
+
+    d1.wymien_toner()
+    d1.zaladuj_papier(150)
+
+    d = d2
+    if not d.sprawna():
+        d = d1
+
+    print(d)        # Brother (HL-1210WE), papier: 150 arkuszy, toner: 100 %
+
+    w = d.drukuj(120)
+    print(f"Wydrukowano: {w} stron")    # Wydrukowano: 120 stron
+    w = d.drukuj(40)
+    print(f"Wydrukowano: {w} stron")    # Wydrukowano: 30 stron
+
+    print(d)        # Brother (HL-1210WE), papier: 0 arkuszy, toner: 25.0 %
+
+    if not d.zaladuj_papier(300):
+        if not d.zaladuj_papier(200):
+            d.zaladuj_papier(100)
+
+    print(d)        # Brother (HL-1210WE), papier: 200 arkuszy, toner: 25.0 %
+
+    w = d.drukuj(120)
+    print(f"Wydrukowano: {w} stron")    # Wydrukowano: 50 stron
+
+    print(d)        # Brother (HL-1210WE), papier: 150 arkuszy, toner: 0.0 %
